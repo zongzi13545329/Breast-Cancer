@@ -1,0 +1,178 @@
+# Base Configuration for EMBED Recall Reduction
+
+# Data Configuration
+data:
+  root_dir: "./data/processed"
+  image_size: 1024  # Original resolution
+  num_workers: 8
+  pin_memory: true
+  
+  # Dataset splits
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  
+  # Stratification
+  stratify_by_race: true
+  stratify_by_outcome: true
+  
+  # Temporal settings
+  max_prior_exams: 3  # Use up to 3 prior exams
+  temporal_window_years: 3  # Look back 3 years maximum
+  
+  # Augmentation
+  augmentation:
+    horizontal_flip: true
+    rotation_degrees: 15
+    brightness: 0.2
+    contrast: 0.2
+    random_crop: true
+    normalize: true
+    mean: [0.485]  # Grayscale
+    std: [0.229]
+
+# Model Configuration
+model:
+  backbone: "resnet50"  # Options: resnet50, efficientnet_b4, vit_base_patch16_224
+  pretrained: true
+  freeze_backbone_epochs: 5  # Freeze backbone for first N epochs
+  
+  # Temporal settings
+  use_temporal: true
+  temporal_fusion: "attention"  # Options: concat, attention, cross_attention
+  
+  # Fairness settings
+  use_fairness: true
+  fairness_method: "race_conditional"  # Options: race_conditional, adversarial
+  adapter_dim: 64
+  num_races: 5  # African American, White, Asian, Hispanic
+  
+  # Output
+  num_classes: 1  # Binary: unnecessary recall or not
+  dropout: 0.3
+
+
+    # Multi-task settings
+  num_classes: 1        # Recall (binary)
+  num_birads: 5         # BI-RADS 0,1,2,3,4 (5 classes)
+  num_density: 4        # Density a,b,c,d (4 classes)
+  
+  # Multi-task head dimensions
+  shared_head_dim: 256  
+  task_head_dim: 128    
+
+training:
+  # Multi-task loss weights
+  recall_weight: 1.0
+  birads_weight: 0.5
+  density_weight: 0.3
+  # Optimization
+  optimizer: "adamw"
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  momentum: 0.9  # For SGD
+  
+  # Learning rate schedule
+  scheduler: "cosine"  # Options: cosine, step, plateau
+  warmup_epochs: 5
+  min_lr: 1e-6
+  
+  # Training settings
+  epochs: 100
+  batch_size: 16  # Adjust based on GPU memory
+  gradient_accumulation_steps: 4  # Effective batch size = 64
+  mixed_precision: true  # AMP
+  
+  # Class imbalance handling
+  class_weights: [1.0, 9.0]  # [benign, recall] - adjust based on actual ratio
+  focal_loss: true
+  focal_alpha: 0.75
+  focal_gamma: 2.0
+  
+  # Regularization
+  label_smoothing: 0.1
+  mixup_alpha: 0.2  # 0 to disable
+  cutmix_alpha: 0.0  # 0 to disable
+  
+  # Early stopping
+  early_stopping_patience: 15
+  
+  # Checkpointing
+  save_frequency: 5  # Save every N epochs
+  save_best_only: true
+  metric_for_best: "val_auc"  # Options: val_auc, val_specificity, val_fairness
+
+# Fairness Configuration
+fairness:
+  # Constraint type
+  constraint: "demographic_parity"  # Options: demographic_parity, equalized_odds
+  
+  # Loss weights
+  task_loss_weight: 1.0
+  fairness_loss_weight: 0.5
+  
+  # Adversarial settings (if using adversarial debiasing)
+  adversarial:
+    discriminator_lr: 1e-3
+    gradient_reversal_lambda: 1.0
+    adversary_steps: 3  # Train adversary N times per task training
+
+# Evaluation Configuration
+evaluation:
+  # Metrics
+  metrics:
+    - "auc"
+    - "sensitivity"
+    - "specificity"
+    - "ppv"
+    - "npv"
+    - "f1"
+  
+  # Fairness metrics
+  fairness_metrics:
+    - "demographic_parity"
+    - "equalized_odds"
+    - "calibration_by_race"
+    - "fpr_disparity"
+    - "tpr_disparity"
+  
+  # Statistical tests
+  bootstrap_iterations: 1000
+  confidence_level: 0.95
+  
+  # Operating points
+  target_sensitivity: 0.95  # Must maintain high sensitivity
+  
+  # Visualization
+  plot_roc: true
+  plot_calibration: true
+  plot_confusion_matrix: true
+  plot_by_race: true
+
+# Logging Configuration
+logging:
+  log_dir: "./logs"
+  tensorboard: true
+  wandb: false  # Set to true if using Weights & Biases
+  wandb_project: "embed_recall_reduction"
+  wandb_entity: null  # Your W&B username/team
+  
+  # Logging frequency
+  log_every_n_steps: 50
+  val_every_n_epochs: 1
+
+# Hardware Configuration
+hardware:
+  device: "cuda"  # Options: cuda, cpu
+  gpu_ids: [0]  # List of GPU IDs to use
+  num_workers: 8
+  prefetch_factor: 2
+
+# Random Seeds
+seed: 42
+
+# Experiment Tracking
+experiment:
+  name: "baseline"
+  tags: ["embed", "recall_reduction", "fairness"]
+  notes: "Baseline model with temporal comparison and fairness constraints"

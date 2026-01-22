@@ -1,0 +1,41 @@
+# Configuration for Temporal Model (extends base_config.yaml)
+
+# Inherit most settings from base_config.yaml, only override specific parameters
+
+model:
+  backbone: "resnet50"
+  pretrained: true
+  freeze_backbone_epochs: 5
+  
+  # Temporal settings (ENABLED)
+  use_temporal: true
+  temporal_fusion: "attention"  # Use cross-attention for temporal comparison
+  
+  # Fairness settings (DISABLED for this model)
+  use_fairness: false
+  
+  num_classes: 1
+  dropout: 0.3
+
+  # Multi-task settings
+  num_classes: 1        # Recall (binary)
+  num_birads: 5         # BI-RADS 0,1,2,3,4 (5 classes)
+  num_density: 4        # Density a,b,c,d (4 classes)
+  
+  # Multi-task head dimensions
+  shared_head_dim: 256  # 共享特征维度
+  task_head_dim: 128    # 每个任务头的隐藏层维度
+
+training:
+  # Multi-task loss weights
+  recall_weight: 1.0
+  birads_weight: 0.5
+  density_weight: 0.3
+  epochs: 100
+  batch_size: 12  # Slightly smaller due to two images per sample
+  learning_rate: 5e-5  # Lower LR for temporal model
+  
+experiment:
+  name: "temporal_model"
+  tags: ["embed", "recall_reduction", "temporal", "longitudinal"]
+  notes: "Temporal model with Siamese network comparing current and prior exams"
