@@ -1,13 +1,15 @@
 
 
 from .dataset import (
-    EMBEDSingleViewLongitudinalDataset,  
-    create_data_loaders,       
+    EMBEDRecallDataset,   
+    BalancedBatchSampler,
+    create_data_loaders,
     collate_fn                  
 )
 
 __all__ = [
-    'EMBEDSingleViewLongitudinalDataset',
+    'EMBEDRecallDataset',
+    'BalancedBatchSampler',
     'create_data_loaders',
     'collate_fn'
 ]

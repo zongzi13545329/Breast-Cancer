@@ -1,1 +1,9 @@
 scripts/outputs/
+pretrained/
+__pycache__/
+*.pyc
+*.pth
+*.p
+.ipynb_checkpoints/
+scripts/outputs/
+preprocessed_2944x1920/
