@@ -7,3 +7,7 @@ __pycache__/
 .ipynb_checkpoints/
 scripts/outputs/
 preprocessed_2944x1920/
+EMBED_OpenData_metadata.csv
+*.csv
+EMBED_OpenData_metadata.csv
+*.csv
